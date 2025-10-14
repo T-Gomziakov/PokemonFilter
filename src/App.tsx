@@ -3,9 +3,14 @@ import "./App.css";
 function App() {
   return (
     <>
-      {/* Pokemon List */}
-      {/* Filtering System based */}
-      {/* Table */}
+      <main>
+        {/* Pokemon List */}
+        <textarea></textarea>
+        {/* Filtering System based */}
+        <div></div>
+        {/* Table */}
+        <table></table>
+      </main>
     </>
   );
 }
