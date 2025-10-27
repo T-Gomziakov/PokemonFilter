@@ -11,11 +11,11 @@ function App() {
   const [nameFilter, setNameFilter] = useState<ColumnFilter[]>([]);
   return (
     <>
-      <main>
+      <div id="container" className="max-w-5xl mx-auto mt-8 overflow-auto">
         <PokemonTextInput setPokemonList={setPokemonList} />
         <FilterList nameFilter={nameFilter} setNameFilter={setNameFilter} />
         <PokemonTable pokemonList={pokemonList} columnFilters={nameFilter} />
-      </main>
+      </div>
     </>
   );
 }

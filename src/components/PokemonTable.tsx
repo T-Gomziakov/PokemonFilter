@@ -17,8 +17,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Pokemon } from "pokeapi-js-wrapper";
-import type { MoveFilterDef } from "./PokemonTextInput";
+import type { MoveGroupsFilter } from "./FilterList";
 import { useEffect } from "react";
+import MovesCell from "./MovesCell";
 const columnHelper = createColumnHelper<Partial<Pokemon>>();
 
 const columns = [
@@ -126,11 +127,45 @@ const columns = [
     id: "moves",
     header: "Moves",
     cell: (props) => (
-      <div>
-        {props.getValue()?.map((moveElem) => moveElem.move.name + "\n")}
-      </div>
+      <MovesCell cell={props.cell} row={props.row} table={props.table} />
     ),
-    filterFn: "arrIncludesAll",
+    filterFn: (
+      row: Row<Partial<Pokemon>>,
+      columnId: string,
+      filterValue: MoveGroupsFilter[]
+    ) => {
+      // Get all the moves of the pokemon
+      const rowMoves = (row.getValue(columnId) as Pokemon["moves"]).map(
+        (moveElement) => moveElement.move.name
+      );
+      // For each group, perform a moveset check
+      for (const moveGroup of filterValue) {
+        if (moveGroup.moves.every((move) => move.inclusion === false)) continue;
+        // Check if the group includes all true moves
+        const trueMoves = moveGroup.moves.filter(
+          (move) => move.inclusion === true
+        );
+        let trueCheck = false;
+        if (trueMoves.length) {
+          trueCheck = trueMoves.every((move) =>
+            rowMoves.includes(move.name.toLowerCase().replace(" ", "-"))
+          );
+          if (!trueCheck) return false;
+        }
+        // Check if the group includes at least 1 indeterminate move OR we have a true move
+        const indeterminateMoves = moveGroup.moves.filter(
+          (move) => move.inclusion === "indeterminate"
+        );
+        if (indeterminateMoves.length) {
+          const indeterminateCheck = indeterminateMoves.some((move) =>
+            rowMoves.includes(move.name.toLowerCase().replace(" ", "-"))
+          );
+          if (!indeterminateCheck && !trueCheck) return false;
+        }
+      }
+      // We passed all the checks, render the row
+      return true;
+    },
   }),
 ];
 
@@ -152,10 +187,14 @@ export function PokemonTable({
     },
   });
 
+  useEffect(() => {
+    console.log(columnFilters);
+  }, [columnFilters]);
+
   const headers = table.getHeaderGroups().map((headerGroup) => (
     <TableRow key={headerGroup.id}>
       {headerGroup.headers.map((header) => (
-        <TableHead key={header.id}>
+        <TableHead key={header.id} className="sticky top-0.5">
           {flexRender(header.column.columnDef.header, header.getContext())}
         </TableHead>
       ))}
@@ -172,12 +211,8 @@ export function PokemonTable({
     </TableRow>
   ));
 
-  useEffect(() => {
-    console.log(table.getState().columnFilters);
-  }, [table.getState().columnFilters]);
-
   return (
-    <Table>
+    <Table className="overflow-x-auto">
       <TableHeader>{headers}</TableHeader>
       <TableBody>{rows}</TableBody>
     </Table>
