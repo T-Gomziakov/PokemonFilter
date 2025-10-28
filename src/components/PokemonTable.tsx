@@ -134,7 +134,7 @@ const columns = [
       columnId: string,
       filterValue: MoveGroupsFilter[]
     ) => {
-      // Get all the moves of the pokemon
+      // Get all the moves' names of the pokemon
       const rowMoves = (row.getValue(columnId) as Pokemon["moves"]).map(
         (moveElement) => moveElement.move.name
       );

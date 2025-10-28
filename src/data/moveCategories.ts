@@ -21,8 +21,3 @@ export const entryHazardsRemoval = {
   groupName: "Hazard Removals",
   moves: ["Rapid Spin", "Mortal Spin", "Defog", "Tidy Up", "Court Change"],
 };
-
-// export const knockOff = {
-//   groupName: "Knock off",
-//   moves: ["Knock Off"],
-// };
