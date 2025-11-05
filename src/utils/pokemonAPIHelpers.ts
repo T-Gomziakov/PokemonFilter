@@ -1,39 +1,25 @@
 import { Pokedex, type Pokemon } from "pokeapi-js-wrapper";
 /**
- * A function that takes a string of pokemon names and returns objects queried from the pokemon API
- *
 
- * @param pokemonList Text written by the user. Should be a string if unparsed; should be an array with each entry containing legal pokemon name if parsed
  * @returns A promise to an array of Pokemon objects
  */
-export async function getPokemonByName(
-  pokemonList: string | string[]
-): Promise<Array<Pokemon>> {
-  if (!Array.isArray(pokemonList)) {
-    pokemonList = await parsePokemonList(pokemonList);
-  }
-  let storedPokemonList = [] as string[];
-  pokemonList = pokemonList.reduce((finalPokemonList, currentPokemonName) => {
-    if (localStorage.getItem(currentPokemonName)) {
-      continue;
-    } else {
+export async function getAllPokemon(): Promise<Array<Pokemon>> {
+  const P = new Pokedex();
+  const pokemonNamesList = await getAllPokemonNames();
+
+  const retrievedList = await Promise.allSettled(
+    pokemonNamesList.map(async (pokemon) => {
+      return P.getPokemonByName(pokemon);
+    })
+  );
+
+  const fulfilledList = retrievedList.reduce((finalList, currentPromise) => {
+    if (currentPromise.status == "fulfilled") {
+      finalList.push(currentPromise.value);
     }
-  });
-
-  // const P = new Pokedex();
-  // const retrievedList = await Promise.allSettled(
-  //   pokemonList.map(async (pokemon) => {
-  //     return P.getPokemonByName(pokemon);
-  //   })
-  // );
-  // const convertedList = retrievedList.reduce((finalList, currentPromise) => {
-  //   if (currentPromise.status == "fulfilled") {
-  //     finalList.push(currentPromise.value);
-  //   }
-  //   return finalList;
-  // }, [] as Pokemon[]);
-
-  return convertedList;
+    return finalList;
+  }, [] as Pokemon[]);
+  return fulfilledList;
 }
 
 /** Parses the list of names to give an array of legal pokemon names */
@@ -47,17 +33,7 @@ export async function parsePokemonList(pokemonList: string): Promise<string[]> {
 }
 
 export async function getAllPokemonNames(): Promise<string[]> {
-  if (localStorage.getItem("pokemonNames")) {
-    return JSON.parse(localStorage.getItem("pokemonNames")!);
-  }
-  const pokemonList = (
-    await (await fetch("https://pokeapi.co/api/v2/pokemon?limit=-1")).json()
-  ).results as Array<{ name: string; url: string }>;
-  console.log(pokemonList);
-  const parsedPokemonList = pokemonList.map(
-    (pokemonEntry) => pokemonEntry.name
+  return (await new Pokedex().getPokemonsList()).results.map(
+    (entry) => entry.name
   );
-  // Store the retrieved pokemon in localstorage
-  localStorage.setItem("pokemonNames", JSON.stringify(parsedPokemonList));
-  return parsedPokemonList;
 }
