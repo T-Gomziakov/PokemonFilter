@@ -1,4 +1,3 @@
-import { getPokemonByName } from "@/utils/pokemonFetcher";
 import type { Pokemon } from "pokeapi-js-wrapper";
 import {
   useState,
@@ -19,12 +18,8 @@ interface IPokemonTextInputProps {
 
 export function PokemonTextInput({ setPokemonList }: IPokemonTextInputProps) {
   const [pokemonTextArea, setPokemonTextArea] = useState("");
-  function handleSubmit(event: FormEvent) {
+  function handlePokemonChange(event: FormEvent) {
     event.preventDefault();
-    (async () => {
-      setPokemonTextArea("");
-      setPokemonList(await getPokemonByName(pokemonTextArea));
-    })();
   }
   return (
     <Collapsible>
@@ -44,16 +39,15 @@ export function PokemonTextInput({ setPokemonList }: IPokemonTextInputProps) {
         </Label>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <form onSubmit={handleSubmit} className="mb-8">
+        <form className="mb-8">
           <Textarea
             id="data-input"
             placeholder="e.g., Pikachu, Charizard, etc"
             value={pokemonTextArea}
-            onChange={(e) => setPokemonTextArea(e.target.value)}
+            onChange={(e) => handlePokemonChange(e)}
             className="mb-3"
             rows={3}
           />
-          <Button type="submit">Reset</Button>
         </form>
       </CollapsibleContent>
     </Collapsible>

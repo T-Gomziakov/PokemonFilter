@@ -1,6 +1,11 @@
 import * as moveCategories from "@/data/moveCategories";
 import type { ColumnFilter } from "@tanstack/react-table";
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
 import { changeInclusion } from "@/utils/moveInclusionHelpers";
@@ -11,7 +16,15 @@ import {
   CollapsibleTrigger,
 } from "./ui/collapsible";
 import { Button } from "./ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+import { Separator } from "./ui/separator";
 
 interface FilterListProps {
   nameFilter: ColumnFilter[];
@@ -37,7 +50,7 @@ const moveGroups = Object.values(moveCategories).map((category) => ({
 })) as MoveGroupsDef;
 
 export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
-  const getGroupInclusion = useCallback(() => {
+  const getGroupInclusion = useMemo(() => {
     return moveGroups.map((moveGroup) => ({
       groupName: moveGroup.groupName,
       getInclusion: () => {
@@ -96,7 +109,7 @@ export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
       return;
     } else {
       newFilter = [...nameFilter];
-      const groupInclusion = getGroupInclusion()
+      const groupInclusion = getGroupInclusion
         .find((group) => group.groupName === groupName)
         ?.getInclusion();
 
@@ -123,7 +136,7 @@ export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
               move.inclusion === true || move.inclusion === "indeterminate"
           )
         ) {
-          moves = moves?.map((move) => ({ name: move.name, inclusion: true }));
+          moves = moves?.map((move) => ({ name: move.name, inclusion: false }));
         }
         // Otherwise, select all unselected moves
         else {
@@ -143,6 +156,27 @@ export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
         .concat({ id: "moves", value: newMoveGroupsFilter });
       setNameFilter(newFilter);
     }
+  }
+
+  function resetAllInclusion() {
+    // Check if the filters exists
+    const movesFilter = nameFilter?.find((filter) => filter.id === "moves");
+    if (!movesFilter) return;
+    let newFilter = [...nameFilter];
+    let newMoveGroupsFilter = movesFilter.value as MoveGroupsFilter[];
+
+    newMoveGroupsFilter = newMoveGroupsFilter.map((moveGroup) => ({
+      groupName: moveGroup.groupName,
+      moves: moveGroup.moves.map((move) => ({
+        name: move.name,
+        inclusion: false,
+      })),
+    }));
+
+    newFilter = newFilter
+      .filter((filter) => filter.id !== "moves")
+      .concat({ id: "moves", value: newMoveGroupsFilter });
+    setNameFilter(newFilter);
   }
 
   function getMoveInclusion(moveName: string, moveGroup: string) {
@@ -214,7 +248,71 @@ export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
   }
   return (
     <>
-      <div className="grid lg:grid-cols-3 md:grid-cols-2 mx-2 px-0 mb-6 gap-6">
+      <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-gray-900">Filter by Moves</h2>
+            <p className="text-gray-500 text-sm">
+              Click on moves to filter Pokémon that can learn them
+            </p>
+          </div>
+          <Button
+            variant={"ghost"}
+            className="hover:bg-gray-200 border-y-1 border-gray-200"
+            onClick={() => resetAllInclusion()}
+          >
+            <X />
+            <Separator orientation={"vertical"} />
+            Clear All
+          </Button>
+        </div>
+        <ScrollArea className="h-48">
+          <Accordion
+            type="single"
+            collapsible
+            className="grid lg:grid-cols-3 md:grid-cols-2 px-0 gap-6"
+          >
+            {moveGroups.map((moveGroup) => (
+              <AccordionItem
+                key={moveGroup.groupName}
+                value={moveGroup.groupName}
+              >
+                <div className="flex flex-row">
+                  <Checkbox
+                    className="my-auto mx-2 size-6"
+                    checked={getGroupInclusion
+                      .find((group) => group.groupName === moveGroup.groupName)
+                      ?.getInclusion()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateGroupInclusion(moveGroup.groupName);
+                    }}
+                  />
+                  <AccordionTrigger className="flex px-2">
+                    <p className="flex-1">{moveGroup.groupName}</p>
+                  </AccordionTrigger>
+                </div>
+                <AccordionContent>
+                  {moveGroup.moves.map((move) => (
+                    <div key={moveGroup.groupName + move} className="py-1">
+                      <Label className="flex p-2">
+                        <Checkbox
+                          checked={getMoveInclusion(move, moveGroup.groupName)}
+                          onClick={() =>
+                            updateMoveInclusion(move, moveGroup.groupName)
+                          }
+                        />
+                        {move}
+                      </Label>
+                    </div>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </ScrollArea>
+      </div>
+      {/* <div className="grid lg:grid-cols-3 md:grid-cols-2 px-0 mb-6 gap-6">
         <h1 className="col-span-full justify-self-center text-lg font-bold mt-6 mb-0">
           Move Filters
         </h1>
@@ -274,8 +372,7 @@ export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
             </Collapsible>
           );
         })}
-        <Button className="col-span-full w-32 place-self-center">Submit</Button>
-      </div>
+      </div> */}
     </>
   );
 }
