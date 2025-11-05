@@ -1,33 +1,35 @@
-import { useState } from "react";
-import type { Pokemon } from "pokeapi-js-wrapper";
+import { useEffect, useState, type SetStateAction } from "react";
+import { type Pokemon } from "pokeapi-js-wrapper";
 import type { ColumnFilter } from "@tanstack/react-table";
 
-import { PokemonTextInput } from "@/components/PokemonTextInput";
 import { PokemonTable } from "@/components/PokemonTable";
-import { FilterList } from "@/components/FilterList";
-import { getAllPokemonNames, getPokemonByName } from "@/utils/pokemonFetcher";
+import { getAllPokemon } from "./utils/pokemonAPIHelpers";
+import { PokemonTextInput } from "./components/PokemonTextInput";
+import { FilterList } from "./components/FilterList";
 
 function App() {
   const [pokemonList, setPokemonList] = useState<Partial<Pokemon>[]>([]);
   const [nameFilter, setNameFilter] = useState<ColumnFilter[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      setPokemonList(await getAllPokemon());
+    })();
+  }, []);
+
   return (
-    <div id="container" className="max-w-5xl mx-auto mt-8 overflow-auto">
-      {/* <PokemonTextInput setPokemonList={setPokemonList} />
-        <FilterList nameFilter={nameFilter} setNameFilter={setNameFilter} />
-        <PokemonTable pokemonList={pokemonList} columnFilters={nameFilter} /> */}
-      <button
-        onClick={() => {
-          (async () => {
-            getPokemonByName((await getAllPokemonNames()) || "");
-          })();
-        }}
-      >
-        Press me!
-      </button>
-      <button onClick={() => console.log(localStorage.getItem("pokemonNames"))}>
-        Check
-      </button>
-    </div>
+    <>
+      <div className="text-center space-y-2 mb-4">
+        <h1 className="text-blue-600 text-2xl font-semibold">
+          Pokemon Filtering Tool
+        </h1>
+        <p className="text-gray-600 text-xl">
+          Comprehensive stats and move-set filtering
+        </p>
+      </div>
+      <FilterList nameFilter={nameFilter} setNameFilter={setNameFilter} />
+      <PokemonTable pokemonList={pokemonList} columnFilters={nameFilter} />
+    </>
   );
 }
 
