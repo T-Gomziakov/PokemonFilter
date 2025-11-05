@@ -1,10 +1,9 @@
-import { useEffect, useState, type SetStateAction } from "react";
+import { useEffect, useState } from "react";
 import { type Pokemon } from "pokeapi-js-wrapper";
 import type { ColumnFilter } from "@tanstack/react-table";
 
 import { PokemonTable } from "@/components/PokemonTable";
 import { getAllPokemon } from "./utils/pokemonAPIHelpers";
-import { PokemonTextInput } from "./components/PokemonTextInput";
 import { FilterList } from "./components/FilterList";
 
 function App() {

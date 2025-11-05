@@ -23,10 +23,6 @@ import MovesCell from "./MovesCell";
 import { useEffect, useState } from "react";
 import {
   Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";

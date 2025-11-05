@@ -1,22 +1,12 @@
 import * as moveCategories from "@/data/moveCategories";
 import type { ColumnFilter } from "@tanstack/react-table";
-import {
-  useCallback,
-  useMemo,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
 import { changeInclusion } from "@/utils/moveInclusionHelpers";
-import { Item, ItemContent, ItemHeader } from "./ui/item";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "./ui/collapsible";
+
 import { Button } from "./ui/button";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import {
   Accordion,
@@ -312,67 +302,6 @@ export function FilterList({ nameFilter, setNameFilter }: FilterListProps) {
           </Accordion>
         </ScrollArea>
       </div>
-      {/* <div className="grid lg:grid-cols-3 md:grid-cols-2 px-0 mb-6 gap-6">
-        <h1 className="col-span-full justify-self-center text-lg font-bold mt-6 mb-0">
-          Move Filters
-        </h1>
-        {moveGroups.map((moveGroup) => {
-          return (
-            <Collapsible
-              className="outline-1 w-64 rounded-2xl justify-self-center h-min "
-              key={moveGroup.groupName}
-            >
-              <Item className="p-2">
-                <ItemHeader>
-                  <Label className="text-lg0 w-full">
-                    <Checkbox
-                      checked={getGroupInclusion()
-                        .find(
-                          (group) => group.groupName === moveGroup.groupName
-                        )
-                        ?.getInclusion()}
-                      onClick={() => updateGroupInclusion(moveGroup.groupName)}
-                      className="size-6"
-                    />
-
-                    {moveGroup.groupName}
-                  </Label>
-                  <CollapsibleTrigger asChild>
-                    <Button variant={"secondary"} size={"icon-lg"}>
-                      <ChevronDown />
-                    </Button>
-                  </CollapsibleTrigger>
-                </ItemHeader>
-              </Item>
-              <CollapsibleContent>
-                <Item className="pt-0 pl-6">
-                  <ItemContent>
-                    <ul>
-                      {moveGroup.moves.map((move) => (
-                        <li key={moveGroup.groupName + move}>
-                          <Label>
-                            {" "}
-                            <Checkbox
-                              checked={getMoveInclusion(
-                                move,
-                                moveGroup.groupName
-                              )}
-                              onClick={() =>
-                                updateMoveInclusion(move, moveGroup.groupName)
-                              }
-                            />
-                            {move}
-                          </Label>
-                        </li>
-                      ))}
-                    </ul>
-                  </ItemContent>
-                </Item>
-              </CollapsibleContent>
-            </Collapsible>
-          );
-        })}
-      </div> */}
     </>
   );
 }

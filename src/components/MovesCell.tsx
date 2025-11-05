@@ -4,9 +4,9 @@ import { ScrollArea } from "./ui/scroll-area";
 
 function MovesCell({
   cell,
-  row,
-  table,
-}: Partial<CellContext<Partial<Pokemon>, MoveElement[] | undefined>>) {
+}: // row,
+// table,
+Partial<CellContext<Partial<Pokemon>, MoveElement[] | undefined>>) {
   const moves =
     cell
       ?.getValue()
