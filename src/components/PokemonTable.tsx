@@ -310,8 +310,8 @@ export function PokemonTable({
           </TableHeader>
           <TableBody>{rows}</TableBody>
         </Table>
-        <div id="pagination">
-          <Pagination>
+        <div id="pagination" className="flex flex-row">
+          <Pagination className="my-auto">
             <PaginationPrevious
               href={table.getCanPreviousPage() ? "#" : undefined}
               isActive={table.getCanPreviousPage()}
@@ -337,6 +337,12 @@ export function PokemonTable({
               }}
             />
           </Pagination>
+          <div id="page-info" className="w-32 my-auto ">
+            <p>
+              Page {pagination.pageIndex > 0 ? pagination.pageIndex + 1 : 0} of{" "}
+              {table.getPageCount()}
+            </p>
+          </div>
         </div>
       </div>
     </>
