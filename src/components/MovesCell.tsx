@@ -2,14 +2,11 @@ import type { CellContext } from "@tanstack/react-table";
 import type { MoveElement, Pokemon } from "pokeapi-js-wrapper";
 import { ScrollArea } from "./ui/scroll-area";
 import type { MoveGroupsFilter } from "./FilterList";
-import { useEffect } from "react";
 
 function MovesCell({
   cell,
-  row,
   table,
 }: // row,
-// table,
 Partial<CellContext<Partial<Pokemon>, MoveElement[] | undefined>>) {
   const movesFilter = (
     (table?.getColumn("moves")?.getFilterValue() || []) as MoveGroupsFilter[]
