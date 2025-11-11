@@ -48,6 +48,22 @@ const typeColors: { [key: string]: string } = {
   fairy: "bg-pink-400 hover:bg-pink-500",
 };
 
+const statsFilterFn = (
+  rowA: Row<Partial<Pokemon>>,
+  rowB: Row<Partial<Pokemon>>,
+  stat:
+    | "hp"
+    | "attack"
+    | "defense"
+    | "special-attack"
+    | "special-defense"
+    | "speed"
+) => {
+  const rowAHp = rowA.original.stats?.find((entry) => entry.stat.name === stat);
+  const rowBHp = rowB.original.stats?.find((entry) => entry.stat.name === stat);
+  return (rowAHp?.base_stat ?? 0) - (rowBHp?.base_stat ?? 0);
+};
+
 const columnHelper = createColumnHelper<Partial<Pokemon>>();
 
 const columns = [
@@ -88,6 +104,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "hp"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/attack",
@@ -102,6 +119,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "attack"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/defense",
@@ -116,6 +134,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "defense"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/special-attack",
@@ -130,6 +149,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-attack"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/special-defense",
@@ -144,6 +164,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-defense"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/speed",
@@ -158,6 +179,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "speed"),
   }),
   columnHelper.accessor("moves", {
     id: "moves",
