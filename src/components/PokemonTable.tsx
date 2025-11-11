@@ -48,6 +48,22 @@ const typeColors: { [key: string]: string } = {
   fairy: "bg-pink-400 hover:bg-pink-500",
 };
 
+const statsFilterFn = (
+  rowA: Row<Partial<Pokemon>>,
+  rowB: Row<Partial<Pokemon>>,
+  stat:
+    | "hp"
+    | "attack"
+    | "defense"
+    | "special-attack"
+    | "special-defense"
+    | "speed"
+) => {
+  const rowAHp = rowA.original.stats?.find((entry) => entry.stat.name === stat);
+  const rowBHp = rowB.original.stats?.find((entry) => entry.stat.name === stat);
+  return (rowAHp?.base_stat ?? 0) - (rowBHp?.base_stat ?? 0);
+};
+
 const columnHelper = createColumnHelper<Partial<Pokemon>>();
 
 const columns = [
@@ -88,6 +104,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "hp"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/attack",
@@ -102,6 +119,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "attack"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/defense",
@@ -116,6 +134,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "defense"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/special-attack",
@@ -130,6 +149,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-attack"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/special-defense",
@@ -144,6 +164,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-defense"),
   }),
   columnHelper.accessor("stats", {
     id: "stats/speed",
@@ -158,6 +179,7 @@ const columns = [
         }
       </h1>
     ),
+    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "speed"),
   }),
   columnHelper.accessor("moves", {
     id: "moves",
@@ -288,8 +310,8 @@ export function PokemonTable({
           </TableHeader>
           <TableBody>{rows}</TableBody>
         </Table>
-        <div id="pagination">
-          <Pagination>
+        <div id="pagination" className="flex flex-row">
+          <Pagination className="my-auto">
             <PaginationPrevious
               href={table.getCanPreviousPage() ? "#" : undefined}
               isActive={table.getCanPreviousPage()}
@@ -315,6 +337,12 @@ export function PokemonTable({
               }}
             />
           </Pagination>
+          <div id="page-info" className="w-32 my-auto ">
+            <p>
+              Page {pagination.pageIndex > 0 ? pagination.pageIndex + 1 : 0} of{" "}
+              {table.getPageCount()}
+            </p>
+          </div>
         </div>
       </div>
     </>
