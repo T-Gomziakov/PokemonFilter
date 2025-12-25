@@ -18,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Pokemon } from "pokeapi-js-wrapper";
-import type { MoveGroupsFilter } from "./FilterList";
 import MovesCell from "./MovesCell";
 import { useEffect, useState } from "react";
 import {
@@ -26,6 +25,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
+import type { GroupOfMoves } from "@/utils/typings";
 
 const typeColors: { [key: string]: string } = {
   fire: "bg-orange-500 hover:bg-orange-600",
@@ -191,7 +191,7 @@ const columns = [
     filterFn: (
       row: Row<Partial<Pokemon>>,
       columnId: string,
-      filterValue: MoveGroupsFilter[]
+      filterValue: GroupOfMoves[]
     ) => {
       // Get all the moves' names of the pokemon
       const rowMoves = (row.getValue(columnId) as Pokemon["moves"]).map(
@@ -339,7 +339,7 @@ export function PokemonTable({
           </Pagination>
           <div id="page-info" className="w-32 my-auto ">
             <p>
-              Page {pagination.pageIndex > 0 ? pagination.pageIndex + 1 : 0} of{" "}
+              Page {pagination.pageIndex > 0 ? pagination.pageIndex + 1 : 1} of{" "}
               {table.getPageCount()}
             </p>
           </div>
