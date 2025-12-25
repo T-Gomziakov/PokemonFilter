@@ -4,12 +4,17 @@ import type { ColumnFilter } from "@tanstack/react-table";
 
 import { PokemonTable } from "@/components/PokemonTable";
 import { getAllPokemon } from "./utils/pokemonAPIHelpers";
-import { FilterList } from "./components/FilterList";
+
+import { getDefaultTableFilter } from "./utils/dataGetters";
+import FilterList from "./components/FilterList";
 
 function App() {
   const [pokemonList, setPokemonList] = useState<Partial<Pokemon>[]>([]);
-  const [nameFilter, setNameFilter] = useState<ColumnFilter[]>([]);
+  const [nameFilter, setNameFilter] = useState<ColumnFilter[]>(
+    getDefaultTableFilter()
+  );
 
+  // Have to use a useEffect since data fetching is async
   useEffect(() => {
     (async () => {
       setPokemonList(await getAllPokemon());
@@ -26,7 +31,7 @@ function App() {
           Comprehensive stats and move-set filtering
         </p>
       </div>
-      <FilterList nameFilter={nameFilter} setNameFilter={setNameFilter} />
+      <FilterList tableFilter={nameFilter} setTableFilter={setNameFilter} />
       <PokemonTable pokemonList={pokemonList} columnFilters={nameFilter} />
     </>
   );
