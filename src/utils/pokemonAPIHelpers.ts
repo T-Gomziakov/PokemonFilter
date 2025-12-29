@@ -29,6 +29,7 @@ export async function parsePokemonList(pokemonList: string): Promise<string[]> {
   newList = newList.filter((pokemonName) =>
     legalPokemonNames.includes(pokemonName)
   );
+  newList = [...new Set(newList)];
   return newList;
 }
 
