@@ -8,9 +8,13 @@ import { getAllPokemon } from "./utils/pokemonAPIHelpers";
 import { getDefaultTableFilter } from "./utils/dataGetters";
 import FilterList from "./components/FilterList";
 
+import { ToastContainer } from "react-toastify";
+import SidebarMenu from "./components/SidebarMenu";
+
+import { TableContext } from "./context/TableContext";
 function App() {
   const [pokemonList, setPokemonList] = useState<Partial<Pokemon>[]>([]);
-  const [nameFilter, setNameFilter] = useState<ColumnFilter[]>(
+  const [tableFilter, setTableFilter] = useState<ColumnFilter[]>(
     getDefaultTableFilter()
   );
 
@@ -23,16 +27,27 @@ function App() {
 
   return (
     <>
-      <div className="text-center space-y-2 mb-4">
-        <h1 className="text-blue-600 text-2xl font-semibold">
-          Pokemon Filtering Tool
-        </h1>
-        <p className="text-gray-600 text-xl">
-          Comprehensive stats and move-set filtering
-        </p>
-      </div>
-      <FilterList tableFilter={nameFilter} setTableFilter={setNameFilter} />
-      <PokemonTable pokemonList={pokemonList} columnFilters={nameFilter} />
+      <TableContext
+        value={{
+          pokemonList: pokemonList,
+          setPokemonList: setPokemonList,
+          tableFilter: tableFilter,
+          setTableFilter: setTableFilter,
+        }}
+      >
+        <ToastContainer />
+        <SidebarMenu />
+        <div className="text-center space-y-2 mb-4">
+          <h1 className="text-blue-600 text-2xl font-semibold">
+            Pokemon Filtering Tool
+          </h1>
+          <p className="text-gray-600 text-xl">
+            Comprehensive stats and move-set filtering
+          </p>
+        </div>
+        <FilterList tableFilter={tableFilter} setTableFilter={setTableFilter} />
+        <PokemonTable pokemonList={pokemonList} columnFilters={tableFilter} />
+      </TableContext>
     </>
   );
 }
