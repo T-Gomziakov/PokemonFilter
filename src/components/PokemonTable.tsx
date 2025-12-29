@@ -8,24 +8,40 @@ import {
   useReactTable,
   type ColumnFilter,
   type Row,
+  type VisibilityState,
 } from "@tanstack/react-table";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableHeader, TableRow } from "@/components/ui/table";
 import type { Pokemon } from "pokeapi-js-wrapper";
 import MovesCell from "./MovesCell";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Pagination,
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
-import type { GroupOfMoves } from "@/utils/typings";
+import { type SelectedCells, type GroupOfMoves } from "@/utils/typings";
+import SelectableTableCell from "./SelectableTableCell";
+import { getIndexedRows, getRangeData } from "@/utils/tableHelpers";
+import { toast } from "react-toastify";
+import HeaderCell from "./HeaderCell";
+
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
+
+import {
+  arrayMove,
+  SortableContext,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 const typeColors: { [key: string]: string } = {
   fire: "bg-orange-500 hover:bg-orange-600",
@@ -47,6 +63,20 @@ const typeColors: { [key: string]: string } = {
   dark: "bg-gray-700 hover:bg-gray-800",
   fairy: "bg-pink-400 hover:bg-pink-500",
 };
+
+const defaultColumnIds = [
+  "name",
+  "types",
+  "hp",
+  "attack",
+  "defense",
+  "special-attack",
+  "special-defense",
+  "speed",
+  "moves",
+  "knock-off",
+  "abilities",
+];
 
 const statsFilterFn = (
   rowA: Row<Partial<Pokemon>>,
@@ -71,117 +101,106 @@ const columns = [
     id: "name",
     header: "Name",
     cell: (props) => <h1 key={props.cell.id}>{props.getValue() as string}</h1>,
+    filterFn: (
+      row: Row<Partial<Pokemon>>,
+      columnId: string,
+      filterValue: string[]
+    ) => {
+      const name = row.getValue(columnId) as string;
+      return filterValue.includes(name);
+    },
   }),
-  columnHelper.accessor("types", {
-    id: "types",
-    header: "Type(s)",
-    enableSorting: false,
-    cell: (props) => (
-      <div key={props.cell.id} className="flex gap-1 text-white">
-        {(props.getValue() as Pokemon["types"]).map((type) => (
-          <span
-            key={props.cell.id + type.type.name.toString()}
-            className={
-              typeColors[type.type.name.toString()] + " px-2 py-1 rounded"
-            }
-          >
-            {type?.type?.name.toString()}
-          </span>
-        ))}
-      </div>
-    ),
-  }),
-  columnHelper.accessor("stats", {
-    id: "stats/hp",
-    header: "Health",
-    cell: (props) => (
-      <h1 key={props.cell.id}>
-        {
-          props
-            .getValue()
-            ?.find((entry) => entry.stat.name === "hp")
-            ?.base_stat?.toString() as string
-        }
-      </h1>
-    ),
-    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "hp"),
-  }),
-  columnHelper.accessor("stats", {
-    id: "stats/attack",
-    header: "Attack",
-    cell: (props) => (
-      <h1 key={props.cell.id}>
-        {
-          props
-            .getValue()
-            ?.find((entry) => entry.stat.name == "attack")
-            ?.base_stat.toString() as string
-        }
-      </h1>
-    ),
-    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "attack"),
-  }),
-  columnHelper.accessor("stats", {
-    id: "stats/defense",
-    header: "Defense",
-    cell: (props) => (
-      <h1 key={props.cell.id}>
-        {
-          props
-            .getValue()
-            ?.find((entry) => entry.stat.name == "defense")
-            ?.base_stat.toString() as string
-        }
-      </h1>
-    ),
-    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "defense"),
-  }),
-  columnHelper.accessor("stats", {
-    id: "stats/special-attack",
-    header: "Sp. Atk.",
-    cell: (props) => (
-      <h1 key={props.cell.id}>
-        {
-          props
-            .getValue()
-            ?.find((entry) => entry.stat.name == "special-attack")
-            ?.base_stat.toString() as string
-        }
-      </h1>
-    ),
-    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-attack"),
-  }),
-  columnHelper.accessor("stats", {
-    id: "stats/special-defense",
-    header: "Sp. Def.",
-    cell: (props) => (
-      <h1 key={props.cell.id}>
-        {
-          props
-            .getValue()
-            ?.find((entry) => entry.stat.name == "special-defense")
-            ?.base_stat.toString() as string
-        }
-      </h1>
-    ),
-    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-defense"),
-  }),
-  columnHelper.accessor("stats", {
-    id: "stats/speed",
-    header: "Speed",
-    cell: (props) => (
-      <h1 key={props.cell.id}>
-        {
-          props
-            .getValue()
-            ?.find((entry) => entry.stat.name == "speed")
-            ?.base_stat.toString() as string
-        }
-      </h1>
-    ),
-    sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "speed"),
-  }),
-  columnHelper.accessor("moves", {
+  columnHelper.accessor(
+    (row) => row.types?.map((type) => type.type.name.toString()),
+    {
+      id: "types",
+      header: "Type(s)",
+      enableSorting: false,
+      cell: (props) => (
+        <div key={props.cell.id} className="flex gap-1 text-white">
+          {(props.getValue() as string[]).map((type) => (
+            <span
+              key={props.cell.id + type}
+              className={typeColors[type] + " px-2 py-1 rounded"}
+            >
+              {type}
+            </span>
+          ))}
+        </div>
+      ),
+    }
+  ),
+  columnHelper.accessor(
+    (row) => row.stats?.find((stat) => stat.stat.name === "hp")?.base_stat,
+    {
+      id: "hp",
+      header: "Health",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString()}</h1>
+      ),
+      sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "hp"),
+    }
+  ),
+  columnHelper.accessor(
+    (row) => row.stats?.find((stat) => stat.stat.name === "attack")?.base_stat,
+    {
+      id: "attack",
+      header: "Attack",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString() as string}</h1>
+      ),
+      sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "attack"),
+    }
+  ),
+  columnHelper.accessor(
+    (row) => row.stats?.find((stat) => stat.stat.name === "defense")?.base_stat,
+    {
+      id: "defense",
+      header: "Defense",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString() as string}</h1>
+      ),
+      sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "defense"),
+    }
+  ),
+  columnHelper.accessor(
+    (row) =>
+      row.stats?.find((stat) => stat.stat.name === "special-attack")?.base_stat,
+    {
+      id: "special-attack",
+      header: "Sp. Atk.",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString() as string}</h1>
+      ),
+      sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-attack"),
+    }
+  ),
+  columnHelper.accessor(
+    (row) =>
+      row.stats?.find((stat) => stat.stat.name === "special-defense")
+        ?.base_stat,
+    {
+      id: "special-defense",
+      header: "Sp. Def.",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString() as string}</h1>
+      ),
+      sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "special-defense"),
+    }
+  ),
+  columnHelper.accessor(
+    (row) => row.stats?.find((stat) => stat.stat.name === "speed")?.base_stat,
+    {
+      id: "speed",
+      header: "Speed",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString() as string}</h1>
+      ),
+      sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "speed"),
+    }
+  ),
+  // columnHelper.accessor("moves", {
+  columnHelper.accessor((row) => row.moves?.map((move) => move?.move?.name), {
     id: "moves",
     header: "Moves",
     enableSorting: false,
@@ -194,9 +213,7 @@ const columns = [
       filterValue: GroupOfMoves[]
     ) => {
       // Get all the moves' names of the pokemon
-      const rowMoves = (row.getValue(columnId) as Pokemon["moves"]).map(
-        (moveElement) => moveElement.move.name
-      );
+      const rowMoves = row.getValue(columnId) as string[];
       // For each group, perform a moveset check
       for (const moveGroup of filterValue) {
         if (moveGroup.moves.every((move) => move.inclusion === false)) continue;
@@ -226,6 +243,32 @@ const columns = [
       return true;
     },
   }),
+  columnHelper.accessor(
+    (row) =>
+      row.moves?.map((move) => move?.move?.name).includes("knock-off")
+        ? "Yes"
+        : "No",
+    {
+      id: "knock-off",
+      header: "Knock-off",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue() as string}</h1>
+      ),
+    }
+  ),
+  columnHelper.accessor(
+    (row) =>
+      row
+        .abilities!.sort((abilityA, abilityB) => abilityA.slot - abilityB.slot)
+        .map((ability) => ability.ability.name),
+    {
+      id: "abilities",
+      header: "Abilities",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.join(" ") as string}</h1>
+      ),
+    }
+  ),
 ];
 
 export function PokemonTable({
@@ -242,6 +285,23 @@ export function PokemonTable({
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [columnFilters]);
+  const [columnVisibility] = useState(
+    // columns.map((column) => ({ [column.id!]: false })) as VisibilityState
+    columns.reduce((accumulator, currentColumn) => {
+      return {
+        ...accumulator,
+        [currentColumn.id!]: defaultColumnIds.find(
+          (id) => id === currentColumn.id!
+        )
+          ? true
+          : false,
+      };
+    }, {} as VisibilityState)
+  );
+  const [columnOrder, setColumnOrder] = useState(() =>
+    columns.map((column) => column.id!)
+  );
+
   const table = useReactTable({
     data: pokemonList,
     columns,
@@ -249,13 +309,80 @@ export function PokemonTable({
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnOrderChange: setColumnOrder,
     state: {
       columnFilters,
       pagination,
+      columnVisibility,
+      columnOrder,
     },
   });
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    // this is not a good solution, but will work shoddily for now
+    if (active && over && active.id === over.id) {
+      //
+      const column = table.getColumn(active.id.toString());
+      const sortHandler = column?.getToggleSortingHandler();
+      if (sortHandler) {
+        sortHandler(event);
+      }
+    }
+    if (active && over && active.id !== over.id) {
+      setColumnOrder((columnOrder) => {
+        const oldIndex = columnOrder.indexOf(active.id as string);
+        const newIndex = columnOrder.indexOf(over.id as string);
+        return arrayMove(columnOrder, oldIndex, newIndex);
+      });
+    }
+
+    console.log("ended!");
+  }
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, {}),
+    useSensor(TouchSensor, {}),
+    useSensor(KeyboardSensor, {})
+  );
+
   const isLoading = pokemonList.length === 0;
+
+  const [selectedCells, setSelectedCells] = useState<SelectedCells>({
+    firstCell: [null, null],
+    lastCell: [null, null],
+  });
+
+  const getMemoizedRangeData = useCallback(
+    () => getRangeData(table.getSortedRowModel(), selectedCells),
+    [table, selectedCells]
+  );
+
+  useEffect(() => {
+    function handleKeyboardInput(event: KeyboardEvent) {
+      (async () => {
+        if (event.code === "KeyC" && event.ctrlKey) {
+          const formattedText = getMemoizedRangeData();
+          event.preventDefault();
+          try {
+            await navigator.clipboard.writeText(formattedText);
+            toast("Successfully copied!");
+          } catch (err) {
+            console.error("Clipboard failed:", err);
+            toast(err?.toString());
+          }
+        }
+        if (event.code === "Escape") {
+          setSelectedCells({ firstCell: [null, null], lastCell: [null, null] });
+        }
+      })();
+    }
+    document.addEventListener("keydown", handleKeyboardInput);
+    return () => document.removeEventListener("keydown", handleKeyboardInput);
+  }, [getMemoizedRangeData, table]);
+
+  const indexedRows = getIndexedRows(table.getSortedRowModel());
 
   if (isLoading) {
     return <div className="p-4">Loading...</div>;
@@ -264,20 +391,26 @@ export function PokemonTable({
   const headers = table.getHeaderGroups().map((headerGroup) => (
     <TableRow key={headerGroup.id}>
       {headerGroup.headers.map((header) => (
-        <TableHead
-          key={header.id}
-          className={`hover:bg-gray-300 w-64 ${
-            header.column.getCanSort() ? " cursor-pointer" : ""
-          }`}
-          onClick={header.column.getToggleSortingHandler()}
+        <SortableContext
+          items={columnOrder}
+          strategy={horizontalListSortingStrategy}
         >
-          {flexRender(header.column.columnDef.header, header.getContext())}{" "}
-          {header.column.getIsSorted()
-            ? header.column.getIsSorted() === "desc"
-              ? "↓"
-              : "↑"
-            : ""}
-        </TableHead>
+          <HeaderCell header={header} />
+        </SortableContext>
+        // <TableHead
+        //   key={header.id}
+        //   className={`hover:bg-gray-300 w-64 ${
+        //     header.column.getCanSort() ? " cursor-pointer" : ""
+        //   }`}
+        //   onClick={header.column.getToggleSortingHandler()}
+        // >
+        //   {flexRender(header.column.columnDef.header, header.getContext())}{" "}
+        //   {header.column.getIsSorted()
+        //     ? header.column.getIsSorted() === "desc"
+        //       ? "↓"
+        //       : "↑"
+        //     : ""}
+        // </TableHead>
       ))}
     </TableRow>
   ));
@@ -285,12 +418,16 @@ export function PokemonTable({
   const rows = table.getRowModel().rows.map((row) => (
     <TableRow key={row.id}>
       {row.getVisibleCells().map((cell) => (
-        <TableCell
+        <SelectableTableCell
           key={cell.id}
           className={`text-left text-gray-600 capitalize w-64`}
+          row={indexedRows[cell.row.id]}
+          column={cell.column.getIndex()}
+          selectedCells={selectedCells}
+          setSelectedCells={setSelectedCells}
         >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
+        </SelectableTableCell>
       ))}
     </TableRow>
   ));
@@ -304,12 +441,19 @@ export function PokemonTable({
         <h1>{`Showing ${
           table.getFilteredRowModel().rows.length
         } Pokemon out of ${table.getCoreRowModel().rows.length}`}</h1>
-        <Table className="overflow-y-auto">
-          <TableHeader className="sticky top-0 bg-gray-50 z-10">
-            {headers}
-          </TableHeader>
-          <TableBody>{rows}</TableBody>
-        </Table>
+        <DndContext
+          collisionDetection={closestCenter}
+          modifiers={[restrictToHorizontalAxis]}
+          onDragEnd={handleDragEnd}
+          sensors={sensors}
+        >
+          <Table className="overflow-y-auto">
+            <TableHeader className="sticky top-0 bg-gray-50 z-10">
+              {headers}
+            </TableHeader>
+            <TableBody>{rows}</TableBody>
+          </Table>
+        </DndContext>
         <div id="pagination" className="flex flex-row">
           <Pagination className="my-auto">
             <PaginationPrevious
