@@ -19,13 +19,7 @@ function HeaderCell({ children, header }: HeaderCellProps) {
       }
     : undefined;
   return (
-    <TableHead
-      key={header.id}
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-    >
+    <TableHead ref={setNodeRef} style={style} {...listeners} {...attributes}>
       <span className="flex flex-row text-center items-center">
         <h1>
           {flexRender(header.column.columnDef.header, header.getContext())}

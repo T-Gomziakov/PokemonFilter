@@ -448,8 +448,9 @@ export function PokemonTable({
         <SortableContext
           items={columnOrder}
           strategy={horizontalListSortingStrategy}
+          key={header.id + "sortcontext"}
         >
-          <HeaderCell header={header} />
+          <HeaderCell header={header} key={header.id} />
         </SortableContext>
         // <TableHead
         //   key={header.id}

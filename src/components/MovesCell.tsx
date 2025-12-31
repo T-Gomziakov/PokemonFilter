@@ -19,7 +19,7 @@ Partial<CellContext<Partial<Pokemon>, string[] | undefined>>) {
     <ScrollArea key={cell?.id} className="overflow-auto h-32 w-32">
       {activeMoves.length > 0
         ? activeMoves.map((group) => (
-            <div>
+            <div key={cell?.id + group.groupName}>
               <h4 className="font-bold mt-2">{group.groupName}</h4>
               {cellMoves
                 ?.filter((cellMove2) =>
@@ -32,7 +32,9 @@ Partial<CellContext<Partial<Pokemon>, string[] | undefined>>) {
                 ))}
             </div>
           ))
-        : cellMoves?.map((cellMove) => <p>{cellMove}</p>)}
+        : cellMoves?.map((cellMove) => (
+            <p key={cell?.id + cellMove}>{cellMove}</p>
+          ))}
     </ScrollArea>
   );
 }
