@@ -22,17 +22,6 @@ export async function getAllPokemon(): Promise<Array<Pokemon>> {
   return fulfilledList;
 }
 
-/** Parses the list of names to give an array of legal pokemon names */
-export async function parsePokemonList(pokemonList: string): Promise<string[]> {
-  let newList = pokemonList.toLowerCase().replace(",", "\n").split("\n");
-  const legalPokemonNames = await getAllPokemonNames();
-  newList = newList.filter((pokemonName) =>
-    legalPokemonNames.includes(pokemonName)
-  );
-  newList = [...new Set(newList)];
-  return newList;
-}
-
 export async function getAllPokemonNames(): Promise<string[]> {
   return (await new Pokedex().getPokemonsList()).results.map(
     (entry) => entry.name

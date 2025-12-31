@@ -73,9 +73,12 @@ const defaultColumnIds = [
   "special-attack",
   "special-defense",
   "speed",
+  "total-stats",
   "moves",
   "knock-off",
-  "abilities",
+  "ability-1",
+  "ability-2",
+  "hidden-ability",
 ];
 
 const statsFilterFn = (
@@ -199,6 +202,20 @@ const columns = [
       sortingFn: (rowA, rowB) => statsFilterFn(rowA, rowB, "speed"),
     }
   ),
+  columnHelper.accessor(
+    (row) =>
+      row.stats?.reduce(
+        (accumulator, currentStat) => (accumulator += currentStat.base_stat),
+        0
+      ),
+    {
+      id: "total-stats",
+      header: "Total Stats",
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue()?.toString() as string}</h1>
+      ),
+    }
+  ),
   // columnHelper.accessor("moves", {
   columnHelper.accessor((row) => row.moves?.map((move) => move?.move?.name), {
     id: "moves",
@@ -257,15 +274,36 @@ const columns = [
     }
   ),
   columnHelper.accessor(
-    (row) =>
-      row
-        .abilities!.sort((abilityA, abilityB) => abilityA.slot - abilityB.slot)
-        .map((ability) => ability.ability.name),
+    (row) => row.abilities?.find((ability) => ability.slot === 1)?.ability.name,
     {
-      id: "abilities",
-      header: "Abilities",
+      id: "ability-1",
+      header: "Ability 1",
+      enableSorting: false,
       cell: (props) => (
-        <h1 key={props.cell.id}>{props.getValue()?.join(" ") as string}</h1>
+        <h1 key={props.cell.id}>{props.getValue() as string}</h1>
+      ),
+    }
+  ),
+  columnHelper.accessor(
+    (row) => row.abilities?.find((ability) => ability.slot === 2)?.ability.name,
+    {
+      id: "ability-2",
+      header: "Ability 2",
+      enableSorting: false,
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue() as string}</h1>
+      ),
+    }
+  ),
+  columnHelper.accessor(
+    (row) =>
+      row.abilities?.find((ability) => ability.is_hidden == true)?.ability.name,
+    {
+      id: "hidden-ability",
+      header: "Hidden Ability",
+      enableSorting: false,
+      cell: (props) => (
+        <h1 key={props.cell.id}>{props.getValue() as string}</h1>
       ),
     }
   ),
@@ -315,6 +353,9 @@ export function PokemonTable({
       pagination,
       columnVisibility,
       columnOrder,
+    },
+    initialState: {
+      sorting: [{ id: "name", desc: false }],
     },
   });
 
@@ -440,7 +481,7 @@ export function PokemonTable({
       >
         <h1>{`Showing ${
           table.getFilteredRowModel().rows.length
-        } Pokemon out of ${table.getCoreRowModel().rows.length}`}</h1>
+        } Pokemon out of ${table.getPreFilteredRowModel().rows.length}`}</h1>
         <DndContext
           collisionDetection={closestCenter}
           modifiers={[restrictToHorizontalAxis]}

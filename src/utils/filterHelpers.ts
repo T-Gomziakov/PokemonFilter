@@ -125,7 +125,16 @@ export function advanceMoveInclusion(
 ): ColumnFilter[] {
   const movesFilter = getMovesFilter(filter);
   const currentInclusion = getMoveInclusion(filter, groupName, moveName);
-  const newInclusion = getNextInclusion(currentInclusion);
+  let newInclusion = getNextInclusion(currentInclusion);
+
+  // If its the only move selected in the group, and it is currently in indeterminate state, skip the true state and set it to false
+  const isOnlyMove = movesFilter.value
+    .find((group) => group.groupName === groupName)
+    ?.moves.filter((move) => move.name !== moveName)
+    .every((move) => move.inclusion == false);
+  if (isOnlyMove && currentInclusion == "indeterminate") {
+    newInclusion = false;
+  }
 
   let groupOfMoves = movesFilter.value.find(
     (group) => group.groupName === groupName

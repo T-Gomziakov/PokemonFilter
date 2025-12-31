@@ -1,6 +1,5 @@
 /**  Whether a move is filtered or not.
  *
- *
  * True - all true moves are included.
  *
  * "indeterminate" - at least 1 indeterminate move is included.

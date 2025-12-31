@@ -3,11 +3,9 @@ import { useContext, useEffect, useState } from "react";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import {
-  getAllPokemonNames,
-  parsePokemonList,
-} from "@/utils/pokemonAPIHelpers";
+import { getAllPokemonNames } from "@/utils/pokemonAPIHelpers";
 import { TableContext } from "@/context/TableContext";
+import { parseRawPokemonNames } from "@/utils/textParser";
 
 export function PokemonTextInput() {
   const tableContext = useContext(TableContext);
@@ -25,7 +23,7 @@ export function PokemonTextInput() {
 
   function onPokemonTextSubmit() {
     (async () => {
-      const parsedList = await parsePokemonList(pokemonText);
+      const parsedList = await parseRawPokemonNames(pokemonText);
       tableContext?.setTableFilter((prev) => {
         const oldFilter = [...prev].filter((f) => f.id !== "name");
         return oldFilter.concat({ id: "name", value: parsedList });
@@ -63,7 +61,7 @@ export function PokemonTextInput() {
           placeholder="e.g., Pikachu, Charizard, etc"
           value={pokemonText}
           onChange={(e) => setPokemonText(e.target.value)}
-          className=""
+          className="max-h-20 h-20"
           rows={3}
         />
       </form>
