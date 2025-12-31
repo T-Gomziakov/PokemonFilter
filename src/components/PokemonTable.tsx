@@ -416,7 +416,11 @@ export function PokemonTable({
   useEffect(() => {
     function handleKeyboardInput(event: KeyboardEvent) {
       (async () => {
-        if (event.code === "KeyC" && event.ctrlKey) {
+        if (
+          event.code === "KeyC" &&
+          event.ctrlKey &&
+          selectedCells.firstCell[0] !== null
+        ) {
           const formattedText = getMemoizedRangeData();
           event.preventDefault();
           try {
@@ -434,7 +438,7 @@ export function PokemonTable({
     }
     document.addEventListener("keydown", handleKeyboardInput);
     return () => document.removeEventListener("keydown", handleKeyboardInput);
-  }, [getMemoizedRangeData, table]);
+  }, [getMemoizedRangeData, selectedCells.firstCell, table]);
 
   const indexedRows = getIndexedRows(table.getSortedRowModel());
 
@@ -491,7 +495,7 @@ export function PokemonTable({
     <>
       <div
         id="table-container"
-        className="mx-auto w-full bg-white rounded-lg shadow-2xl p-4"
+        className="mx-auto w-[95%] bg-white rounded-lg shadow-2xl p-4"
       >
         <h1>{`Showing ${
           table.getFilteredRowModel().rows.length
