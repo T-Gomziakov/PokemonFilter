@@ -103,7 +103,20 @@ const columns = [
   columnHelper.accessor("name", {
     id: "name",
     header: "Name",
-    cell: (props) => <h1 key={props.cell.id}>{props.getValue() as string}</h1>,
+    cell: (props) => (
+      <a
+        href={
+          (
+            ("https://www.smogon.com/dex/sm/pokemon/" +
+              props.getValue()) as string
+          ).split("-")[0]
+        }
+        target="_blank"
+        key={props.cell.id}
+      >
+        {props.getValue() as string}
+      </a>
+    ),
     filterFn: (
       row: Row<Partial<Pokemon>>,
       columnId: string,
